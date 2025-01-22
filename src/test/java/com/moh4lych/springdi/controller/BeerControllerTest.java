@@ -1,7 +1,7 @@
 package com.moh4lych.springdi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.moh4lych.springdi.model.Beer;
+import com.moh4lych.springdi.model.BeerDTO;
 import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.services.BeerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,13 +45,13 @@ class BeerControllerTest {
     ArgumentCaptor<UUID> uuidCaptor;
 
     @Captor
-    ArgumentCaptor<Beer> beerCaptor;
+    ArgumentCaptor<BeerDTO> beerCaptor;
 
-    private Beer testBeer;
+    private BeerDTO testBeer;
 
     @BeforeEach
     void setUp() {
-        testBeer = Beer.builder()
+        testBeer = BeerDTO.builder()
                 .id(UUID.randomUUID())
                 .beerName("My Beer Brand")
                 .beerStyle(BeerStyle.PALE_ALE)
@@ -63,7 +64,7 @@ class BeerControllerTest {
 
     @Test
     void testGetBeerById() throws Exception {
-        given(beerService.getBeerById(any(UUID.class))).willReturn(testBeer);
+        given(beerService.getBeerById(any(UUID.class))).willReturn(Optional.of(testBeer));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/" + UUID.randomUUID())
                         .accept(MediaType.APPLICATION_JSON))
@@ -74,9 +75,9 @@ class BeerControllerTest {
 
     @Test
     void testCreateBeer() throws Exception {
-        given(beerService.saveNewBeer(any(Beer.class))).willReturn(testBeer);
+        given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(testBeer);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/beer")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/beer/")
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testBeer)))
@@ -87,17 +88,21 @@ class BeerControllerTest {
 
     @Test
     void testPutBeer() throws Exception {
+        given(beerService.updateBeerById(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(testBeer));
+
         mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/beer/" + UUID.randomUUID())
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testBeer)))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
-        verify(beerService).updateBeerById(any(UUID.class), any(Beer.class));
+        verify(beerService).updateBeerById(any(UUID.class), any(BeerDTO.class));
     }
 
     @Test
     void testDeleteBeer() throws Exception {
+        given(beerService.deleteBeerById(any(UUID.class))).willReturn(Optional.of(testBeer));
+
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/beer/" + testBeer.getId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
@@ -111,6 +116,8 @@ class BeerControllerTest {
     void testPatchBeer() throws Exception {
         Map<String, Object> data = new HashMap<>();
         data.put("beerName", "Test");
+
+        given(beerService.patchBeerById(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(testBeer));
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/beer/" + testBeer.getId())
                         .accept(MediaType.APPLICATION_JSON)
@@ -128,7 +135,7 @@ class BeerControllerTest {
     void testGetBeerNotFound() throws Exception {
         given(beerService.getBeerById(any(UUID.class))).willThrow(NotFoundException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/", UUID.randomUUID())
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/" + UUID.randomUUID())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
