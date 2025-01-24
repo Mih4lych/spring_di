@@ -1,7 +1,9 @@
 package com.moh4lych.springdi.services;
 
+import com.moh4lych.springdi.entities.Beer;
 import com.moh4lych.springdi.mappers.BeerMapper;
 import com.moh4lych.springdi.model.BeerDTO;
+import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.repositories.BeerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,12 +23,29 @@ public class BeerServiceJPA implements BeerService {
     private final BeerMapper beerMapper;
 
     @Override
-    public List<BeerDTO> listBeers() {
-        return beerRepository
-                .findAll()
+    public List<BeerDTO> listBeers(String beerName, BeerStyle beerStyle) {
+        List<Beer> beers;
+
+        if (StringUtils.hasText(beerName) && Objects.isNull(beerStyle)) {
+            beers = listBeersByName(beerName);
+        } else if (!StringUtils.hasText(beerName) && Objects.nonNull(beerStyle)) {
+            beers = listBeersByStyle(beerStyle);
+        } else {
+            beers = beerRepository.findAll();
+        }
+
+        return beers
                 .stream()
                 .map(beerMapper::beerToBeerDto)
                 .toList();
+    }
+
+    private List<Beer> listBeersByName(String beerName) {
+        return beerRepository.findAllByBeerNameIsLikeIgnoreCase("%" + beerName + "%");
+    }
+
+    private List<Beer> listBeersByStyle(BeerStyle beerStyle) {
+        return beerRepository.findAllByBeerStyle(beerStyle);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.moh4lych.springdi.controller;
 
 import com.moh4lych.springdi.model.BeerDTO;
+import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.services.BeerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,8 +57,9 @@ public class BeerController {
     }
 
     @GetMapping
-    public List<BeerDTO> listBeers() {
-        return beerService.listBeers();
+    public List<BeerDTO> listBeers(@RequestParam(required = false) String beerName
+            ,@RequestParam(required = false) BeerStyle beerStyle) {
+        return beerService.listBeers(beerName, beerStyle);
     }
 
     @GetMapping(BEER_PATH_ID)
