@@ -23,6 +23,7 @@ public class CustomErrorController {
 
         return ResponseEntity.badRequest().body(errorList);
     }
+
     @ExceptionHandler(TransactionSystemException.class)
     public ResponseEntity transactionHandler(TransactionSystemException ex) {
         ResponseEntity.BodyBuilder builder = ResponseEntity.badRequest();

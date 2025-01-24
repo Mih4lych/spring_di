@@ -6,10 +6,12 @@ import com.moh4lych.springdi.model.BeerDTO;
 import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.repositories.BeerRepository;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -51,11 +56,32 @@ class BeerControllerIT {
     }
 
     @Test
+    void testListBeersPaging() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/")
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name())
+                        .queryParam("pageNumber", "2")
+                        .queryParam("pageSize", "50")
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.content.length()", is(50)));
+    }
+
+    @Test
+    void testListBeersByNameAndStyle() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/")
+                        .queryParam("beerName", "IPA")
+                        .queryParam("beerStyle", BeerStyle.IPA.name()))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.content.length()", is(25)));
+    }
+
+    @Test
     void testListBeersByName() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/")
                         .queryParam("beerName", "IPA"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(jsonPath("$.size()", is(336)));
+                .andExpect(jsonPath("$.content.length()", is(25)));
     }
 
     @Test
@@ -63,14 +89,14 @@ class BeerControllerIT {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/")
                         .queryParam("beerStyle", BeerStyle.IPA.name()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(jsonPath("$.size()", is(548)));
+                .andExpect(jsonPath("$.content.length()", is(25)));
     }
 
     @Test
     void testListBeers() {
-        List<BeerDTO> list = beerController.listBeers(null, null);
+        Page<BeerDTO> list = beerController.listBeers(null, null, 1, 25);
 
-        assertTrue(list.size() > 10);
+        Assertions.assertEquals(25, list.getContent().size());
     }
 
     @Rollback
@@ -78,9 +104,9 @@ class BeerControllerIT {
     @Test
     void testEmptyListBeers() {
         beerRepository.deleteAll();
-        List<BeerDTO> list = beerController.listBeers(null, null);
+        Page<BeerDTO> list = beerController.listBeers(null, null, 1, 25);
 
-        assertThat(list.size()).isEqualTo(0);
+        assertThat(list.getContent().size()).isEqualTo(0);
     }
 
     @Test
@@ -121,7 +147,7 @@ class BeerControllerIT {
     @Test
     void testUpdateBeer() {
         BeerDTO beerDTO = BeerDTO.builder().beerName("Test").upc("112233").build();
-        BeerDTO beerDTOToChange = beerController.listBeers(null, null).getFirst();
+        BeerDTO beerDTOToChange = beerController.listBeers(null, null, 1, 25).getContent().getFirst();
 
         ResponseEntity response = beerController.updateById(beerDTOToChange.getId(), beerDTO);
 
@@ -144,7 +170,7 @@ class BeerControllerIT {
     @Transactional
     @Test
     void testDeleteBeer() {
-        BeerDTO beerDTOToChange = beerController.listBeers(null, null).getFirst();
+        BeerDTO beerDTOToChange = beerController.listBeers(null, null, 1, 25).getContent().getFirst();
 
         ResponseEntity response = beerController.deleteById(beerDTOToChange.getId());
 
@@ -163,7 +189,7 @@ class BeerControllerIT {
     @Transactional
     @Test
     void testPatchBeer() {
-        BeerDTO beerDTOToChange = beerController.listBeers(null, null).getFirst();
+        BeerDTO beerDTOToChange = beerController.listBeers(null, null, 1, 25).getContent().getFirst();
 
         ResponseEntity response = beerController.patchById(beerDTOToChange.getId(), BeerDTO.builder().beerName("Test").build());
 
