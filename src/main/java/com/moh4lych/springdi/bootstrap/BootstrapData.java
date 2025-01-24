@@ -1,9 +1,11 @@
 package com.moh4lych.springdi.bootstrap;
 
 import com.moh4lych.springdi.entities.Beer;
+import com.moh4lych.springdi.entities.Customer;
 import com.moh4lych.springdi.model.BeerCSVRecord;
 import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.repositories.BeerRepository;
+import com.moh4lych.springdi.repositories.CustomerRepository;
 import com.moh4lych.springdi.services.BeerCSVService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +19,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class BootstrapData implements CommandLineRunner {
     private final BeerRepository beerRepository;
+    private final CustomerRepository customerRepository;
     private final BeerCSVService beerCSVService;
 
     @Override
@@ -30,6 +34,7 @@ public class BootstrapData implements CommandLineRunner {
     public void run(String... args) throws Exception {
         loadBeerData();
         loadCSVData();
+        loadCustomerData();
     }
 
     private void loadCSVData() throws FileNotFoundException {
@@ -99,5 +104,33 @@ public class BootstrapData implements CommandLineRunner {
             beerRepository.save(beer3);
         }
 
+    }
+
+    private void loadCustomerData() {
+
+        if (customerRepository.count() == 0) {
+            Customer customer1 = Customer.builder()
+                    .name("Customer 1")
+                    .version(1)
+                    .createdDate(LocalDateTime.now())
+                    .updateDate(LocalDateTime.now())
+                    .build();
+
+            Customer customer2 = Customer.builder()
+                    .name("Customer 2")
+                    .version(1)
+                    .createdDate(LocalDateTime.now())
+                    .updateDate(LocalDateTime.now())
+                    .build();
+
+            Customer customer3 = Customer.builder()
+                    .name("Customer 3")
+                    .version(1)
+                    .createdDate(LocalDateTime.now())
+                    .updateDate(LocalDateTime.now())
+                    .build();
+
+            customerRepository.saveAll(Arrays.asList(customer1, customer2, customer3));
+        }
     }
 }

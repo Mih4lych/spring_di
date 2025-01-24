@@ -1,6 +1,7 @@
 package com.moh4lych.springdi.bootstrap;
 
 import com.moh4lych.springdi.repositories.BeerRepository;
+import com.moh4lych.springdi.repositories.CustomerRepository;
 import com.moh4lych.springdi.services.BeerCSVService;
 import com.moh4lych.springdi.services.BeerCSVServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,12 +20,14 @@ class BootstrapDataTest {
     BeerRepository beerRepository;
     @Autowired
     BeerCSVService beerCSVService;
+    @Autowired
+    CustomerRepository customerRepository;
 
     BootstrapData bootstrapData;
 
     @BeforeEach
     void setUp() {
-        bootstrapData = new BootstrapData(beerRepository, beerCSVService);
+        bootstrapData = new BootstrapData(beerRepository, customerRepository, beerCSVService);
     }
 
     @Test
