@@ -1,6 +1,7 @@
 package com.moh4lych.springdi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moh4lych.springdi.config.SpringSecurityConfig;
 import com.moh4lych.springdi.model.BeerDTO;
 import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.services.BeerService;
@@ -10,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,10 +29,12 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WebMvcTest(BeerController.class)
+@Import(SpringSecurityConfig.class)
 class BeerControllerTest {
     @Autowired
     MockMvc mockMvc;
@@ -67,6 +71,7 @@ class BeerControllerTest {
         given(beerService.getBeerById(any(UUID.class))).willReturn(Optional.of(testBeer));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/" + UUID.randomUUID())
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -78,6 +83,7 @@ class BeerControllerTest {
         given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(testBeer);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/beer/")
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testBeer)))
@@ -91,6 +97,7 @@ class BeerControllerTest {
         given(beerService.updateBeerById(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(testBeer));
 
         mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/beer/" + UUID.randomUUID())
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testBeer)))
@@ -104,6 +111,7 @@ class BeerControllerTest {
         given(beerService.deleteBeerById(any(UUID.class))).willReturn(Optional.of(testBeer));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/beer/" + testBeer.getId())
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
@@ -120,6 +128,7 @@ class BeerControllerTest {
         given(beerService.patchBeerById(any(UUID.class), any(BeerDTO.class))).willReturn(Optional.of(testBeer));
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/v1/beer/" + testBeer.getId())
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(data)))
@@ -136,6 +145,7 @@ class BeerControllerTest {
         given(beerService.getBeerById(any(UUID.class))).willThrow(NotFoundException.class);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/beer/" + UUID.randomUUID())
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
@@ -143,6 +153,7 @@ class BeerControllerTest {
     @Test
     void testValidationOnCreateBeer() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/beer/")
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(BeerDTO.builder().build())))
@@ -153,6 +164,7 @@ class BeerControllerTest {
     @Test
     void testValidationOnUpdateBeer() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/beer/" + UUID.randomUUID())
+                        .with(httpBasic("test", "test"))
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(BeerDTO.builder().build())))
