@@ -1,14 +1,20 @@
 package com.moh4lych.springdi.services;
 
 import com.moh4lych.springdi.entities.Beer;
+import com.moh4lych.springdi.events.BeerCreatedEvent;
 import com.moh4lych.springdi.mappers.BeerMapper;
 import com.moh4lych.springdi.model.BeerDTO;
 import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.repositories.BeerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +28,7 @@ import java.util.UUID;
 public class BeerServiceJPA implements BeerService {
     private final BeerRepository beerRepository;
     private final BeerMapper beerMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int DEFAULT_PAGE_SIZE = 25;
@@ -77,7 +84,12 @@ public class BeerServiceJPA implements BeerService {
 
     @Override
     public BeerDTO saveNewBeer(BeerDTO beerDTO) {
-        return beerMapper.beerToBeerDto(beerRepository.save(beerMapper.beerDtoToBeer(beerDTO)));
+        val newBeer = beerRepository.save(beerMapper.beerDtoToBeer(beerDTO));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        applicationEventPublisher.publishEvent(new BeerCreatedEvent(newBeer, authentication));
+
+        return beerMapper.beerToBeerDto(newBeer);
     }
 
     @Override

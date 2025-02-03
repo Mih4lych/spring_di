@@ -2,10 +2,12 @@ package com.moh4lych.springdi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moh4lych.springdi.entities.Beer;
+import com.moh4lych.springdi.events.BeerCreatedEvent;
 import com.moh4lych.springdi.model.BeerDTO;
 import com.moh4lych.springdi.model.BeerStyle;
 import com.moh4lych.springdi.repositories.BeerRepository;
 import jakarta.transaction.Transactional;
+import lombok.val;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -35,12 +39,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+@RecordApplicationEvents
 @SpringBootTest
 class BeerControllerIT {
     @Autowired
     BeerController beerController;
     @Autowired
     BeerRepository beerRepository;
+    @Autowired
+    ApplicationEvents applicationEvents;
 
     @Autowired
     WebApplicationContext wac;
@@ -140,6 +147,9 @@ class BeerControllerIT {
         Beer beer = beerRepository.findById(beerId).get();
 
         assertThat(beer).isNotNull();
+        val count = applicationEvents.stream(BeerCreatedEvent.class).count();
+
+        Assertions.assertEquals(1, count);
     }
 
     @Rollback
