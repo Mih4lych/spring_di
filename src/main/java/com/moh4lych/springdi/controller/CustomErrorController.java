@@ -14,7 +14,7 @@ import java.util.Map;
 @ControllerAdvice
 public class CustomErrorController {
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity methodArgumentNotValidExceptionResponseEntity(MethodArgumentNotValidException ex) {
+    public ResponseEntity<?> methodArgumentNotValidExceptionResponseEntity(MethodArgumentNotValidException ex) {
         List<Map<String, String>> errorList = ex.getFieldErrors().stream().map(fieldError -> {
             Map<String, String> map = new HashMap<>();
             map.put(fieldError.getField(), fieldError.getDefaultMessage());
@@ -25,7 +25,7 @@ public class CustomErrorController {
     }
 
     @ExceptionHandler(TransactionSystemException.class)
-    public ResponseEntity transactionHandler(TransactionSystemException ex) {
+    public ResponseEntity<?> transactionHandler(TransactionSystemException ex) {
         ResponseEntity.BodyBuilder builder = ResponseEntity.badRequest();
 
         if (ex.getCause().getCause() instanceof ConstraintViolationException exConstr) {
